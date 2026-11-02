@@ -84,7 +84,7 @@ PR #47484 has the spec worker hand its draft pools to the allocator at startup; 
 
 The fix's own filter leaves the hole open for three pool shapes. Only full slot MHA pools qualify. MLA pools localize token ids per rank, page major pools have no CPU copy, and a DFlash compact cache keeps its own row table, so those drafts are skipped, with no refusal at startup and no abort at retraction. For them the request still resumes on another request's draft KV, now by design. The repo already has both honest alternatives in neighboring code: a startup check that refuses an unsupported backend combination, and a retraction path that aborts a request when its backup cannot be taken. Either beats a silent wrong answer. The configurations affected include multi token prediction drafts on MLA targets, which are the models the project ships first.
 
-One more edge. The `host_pool` backend, the newer shared host tier that also receives transferred KV, has no draft handling either. Whether the combination is unsupported or carries the same gap is an open question on the PR.
+The `host_pool` backend, the newer shared host tier that also receives transferred KV, already carries draft KV: its backup adds a draft pool transfer, and the page envelope receive path refuses packed draft pools at startup. Only the older `cpu_tensor` backend had the gap.
 
 ## The method
 
